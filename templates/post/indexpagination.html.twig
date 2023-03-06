@@ -1,0 +1,208 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Post index{% endblock %}
+
+{% block body %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+{# slider #}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/11.0.2/css/bootstrap-slider.css" integrity="sha512-SZgE3m1he0aEF3tIxxnz/3mXu/u/wlMNxQSnE0Cni9j/O8Gs+TjM9tm1NX34nRQ7GiLwUEzwuE3Wv2FLz2667w==" crossorigin="anonymous" />
+
+ <div class="container mt-5">
+ <div class="row align-items-start">
+<div class="col-4">
+
+	<div class="form-check" id="form-check">
+    {% for category in categories %}
+    <input type="checkbox" name="categories[]" value="{{ category.id }}" lass="form-check-input" id="catid">
+   <label class="form-check-label" for="flexCheckDefault"> {{ category.name }}</label>
+    <br>
+    {% endfor %}
+		</div>
+	
+</div>
+
+    <div class="col-8">
+
+
+  
+    <h1>list posts</h1> 
+    <form id="search-form">
+    <input type="text" name="q" placeholder="Search by name" id="search-input">
+
+  
+        <div class="widget mb-4 pb-4 border-bottom">
+            <h3 class="widget-title">Price</h3>
+            <div class="slider-range" data-start-min="0" data-start-max="{{maxprice}}" data-min="0" data-max="{{maxprice}}" data-step="1">
+                <div class="range-slider-ui">
+                    <div class="range">
+                        <input type="range" step="10" min="0" max="{{maxprice}}" name="min_price" id="min-price" value="0">
+                      
+                        <input type="range" step="10" min="0" max="{{maxprice}}" name="max_price" id="max-price" value="{{maxprice}}">
+                      
+                    </div>
+                </div>
+            </div>
+        </div>
+             min
+          <input type="text" name="min_price_number" id="min-price-number" class="form-control">
+          max
+         <input type="text" name="max_price_number" id="max-price-number" class="form-control">
+<script>
+$(document).ready(function() {
+  // Listen for input changes on the range inputs
+  $('#min-price, #max-price').on('input', function() {
+    // Update the corresponding number input with the same value
+    $('#' + $(this).attr('id') + '-number').val($(this).val());
+  });
+});
+
+</script>
+
+ 
+  
+   
+  
+
+    </form>
+      
+    
+            <div id="spinner" style="display: none;">
+            <div class="spinner-border m-5" role="status">
+        <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+ 
+        <div class="card mt-3 mb-3" id="card-container">
+        
+        </div>
+        
+         <nav aria-label="Page navigation example">
+        <ul class="pagination">
+            <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+            <li class="page-item"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item"><a class="page-link" href="#">Next</a></li>
+        </ul>
+        </nav> 
+    <a href="{{ path('app_post_new') }}">Create new</a>
+    
+    <script>
+   
+   $(document).ready(function() {
+    // Call the AJAX request on page load
+    getPosts('', '', '');
+
+    // Add an event listener for the search form
+    $('#search-form').on('keyup change', function(event) {
+        event.preventDefault();
+
+        // Get the search query
+        var query = $('#search-input').val();
+
+          // Get the minimum and maximum price values
+        var minPrice = $('#min-price').val();
+        var maxPrice = $('#max-price').val();
+         
+           // Get the selected categories
+            var categories = $('input[name="categories[]"]:checked').map(function() {
+            return this.value;
+        }).get().join(',');
+
+        // Call the AJAX request with the search query
+        getPosts(query, minPrice, maxPrice,categories);
+    });
+      // Add an event listener for the form check
+    $('#form-check').on('change', function(event) {
+        // Get the minimum and maximum price values
+        var minPrice = $('#min-price').val();
+        var maxPrice = $('#max-price').val();
+        
+        // Get the selected categories
+       var categories = $('input[name="categories[]"]:checked').map(function() {
+        return this.value;
+        }).get().join(',');
+
+        // Call the AJAX request with the new categories
+        getPosts('', minPrice, maxPrice, categories);
+    });
+
+    // Add an event listener for the range slider
+   $('#min-price, #max-price').on('set', function(event) {
+    // Get the minimum and maximum price values
+    var minPrice = $('#min-price').val();
+    var maxPrice = $('#max-price').val();
+
+    // Get the selected categories
+       var categories = $('input[name="categories[]"]:checked').map(function() {
+        return this.value;
+        }).get().join(',');
+
+    // Call the AJAX request with the new price range
+    getPosts('', minPrice, maxPrice,categories);
+});
+
+});
+
+function getPosts(query, minPrice, maxPrice,categories) {
+    // Show the spinner
+    $('#spinner').show();
+
+    $.ajax({
+        url: '/post/product/searchpagination',
+        type: 'GET',
+        data: {
+            q: query,
+            min_price: minPrice,
+            max_price: maxPrice,
+            categorielist: categories
+        },
+        success: function(response) {
+            let html = '';
+            console.log(response);
+            response.forEach(function(post) {
+                html += ' <div class="card-header">' + post.id +' category :'+ post.category+' </div>';
+                html += ' <div class="card-body">';
+                  html += '<h5 class="card-title">'+ post.name +'</br> price :'+ post.price+ ' DT'+'</h5>';
+                html += '<p class="card-text">'+ post.description +'</p>';
+                html += '<td><a href="#" class="btn btn-primary post-show" data-id="' + post.id + '">show</a> <a href="#" class="btn btn-primary post-edit" data-id="' + post.id + '">edit</a></td>';
+                html += '</div>';
+            });
+
+            // Update the HTML table structure here
+            $('#card-container').html(html);
+
+            // Hide the spinner
+            $('#spinner').hide();
+        },
+        error: function(xhr, status, error) {
+            console.log(error);
+            
+            // Hide the spinner
+            $('#spinner').hide();
+        }
+    });
+}
+$(document).on('click', '.post-show', function(event) {
+    event.preventDefault();
+    var postId = $(this).data('id');
+    var url = '/post/' + postId;
+    // Navigate to the URL
+    window.location.href = url;
+});
+
+// Event listener for the edit link
+$(document).on('click', '.post-edit', function(event) {
+    event.preventDefault();
+    var postId = $(this).data('id');
+    var url = '/post/' + postId + '/edit';
+    // Navigate to the URL
+    window.location.href = url;
+});
+   
+</script>
+</div></div></div>
+
+{% endblock %}

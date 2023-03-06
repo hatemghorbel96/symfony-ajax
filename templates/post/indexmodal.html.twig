@@ -1,0 +1,136 @@
+ {% extends 'base.html.twig' %}
+
+{% block title %}Post index{% endblock %}
+
+{% block body %}
+ <div class="container mt-3">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <table class="table">
+  
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+             <th>category</th>
+            <th>actions</th>
+        </tr>
+    </thead>
+    <tbody id="table-body">
+           
+        {% for post in posts %}
+            <tr id="post-{{ post.id }}">
+                <td >{{ post.id }}</td>
+                <td >{{ post.name }}</td>
+                <td >{{ post.category.name }}</td>
+               <td > <a href="{{path('app_post_show',{'id':post.id})}}" class="btn btn-primary post-show" >show</a> 
+                   
+                    <a href="#" class="btn btn-primary post-edit" data-bs-toggle="modal" data-bs-target="#exampleModal" data-post-id="{{ post.id }}">edit</a>
+                    </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">No records found.</td>
+            </tr>
+        {% endfor %}
+         {{ knp_pagination_render(posts) }}
+    </tbody>
+</table>
+ </div>
+
+ 
+
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Edit post</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+     <div class="modal-body">
+         <form action="{{ path('app_post_edit_ajax', {'id': 0}) }}" method="POST">
+        {{ form_start(form) }} 
+         {{ form_row(form.name, { 'attr': { 'id': 'post_name' } }) }}
+            {{ form_row(form.description, { 'attr': { 'id': 'post_description' } }) }}
+            {{ form_row(form.price, { 'attr': { 'id': 'post_price' } }) }}
+            {{ form_row(form.category, { 'attr': { 'id': 'post_category' } }) }}
+        {{form_end(form)}}         
+         </form>
+        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    var formAction = $('#exampleModal form').attr('action');
+
+    $('.post-edit').click(function() {
+        var postId = $(this).data('post-id');
+        $.ajax({
+            url: '/post/' + postId + '/edit2',
+            method: 'GET',
+            success: function(data) {
+                console.log(data);
+                // Update the form fields with the retrieved data
+                $('#post_name').val(data.name);
+                $('#post_description').val(data.description);
+                $('#post_price').val(data.price);
+                $('#post_cat').val(data.cat);
+                 // Set the value of the category field based on the category name
+                    $('#post_category option').filter(function() {
+                        return $(this).text() === data.category;
+                    }).prop('selected', true);
+                $('#exampleModal form').attr('action', formAction.replace('0', data.id));
+            }
+        });
+    });
+
+
+    // Add event listener to the "Save changes" button in the modal
+    $('#exampleModal .modal-footer button.btn-primary').click(function() {
+        event.preventDefault(); // prevent default form submission behavior
+        
+        // serialize the form data into a query string
+        var form = $('#exampleModal form');
+        
+        // send an AJAX POST request to the server with the serialized form data
+        $.ajax({
+            type: 'POST',
+            url: form.attr('action'),
+            data: form.serialize(),
+           success: function(data) {
+            // get the table row corresponding to the updated post
+            var row = $('#post-' + data.id);
+
+            row.find('td:nth-child(2)').text(data.name);
+        row.find('td:nth-child(3)').text(data.category);
+
+
+    
+        },
+
+    error: function(jqXHR, textStatus, errorThrown) {
+        // display an error message
+        alert('An error occurred while processing your request. Please try again later.');
+    }
+    });
+});
+});
+
+</script>
+ {#  {{ form_start(form) }} #}
+                   {#  <div class="mb-3">
+                        <label for="post_name" class="col-form-label">Name:</label>
+                        <input type="text" class="form-control" id="post_name" name="post[name]">
+                    </div>
+                    <div class="mb-3">
+                        <label for="post_description" class="col-form-label">Description:</label>
+                        <textarea class="form-control" id="post_description" name="post[description]"></textarea>
+                    </div> #}
+                   {#  {{ form_end(form) }} #}
+ {% endblock %}

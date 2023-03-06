@@ -1,0 +1,87 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Post{% endblock %}
+
+{% block body %}
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<div class="container mt-5">
+  <h1>Create new Post</h1>
+
+  <form id="post-form" method="post" action="{{ path('app_post_new') }}">
+    {{ form_widget(form) }}
+    <button class="btn">{{ button_label|default('Save') }}</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+         <th>cat</th>
+          <th>price</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+        {% for post in posts %}
+        <tr>
+          <td>{{ post.id }}</td>
+          <td>{{ post.name }}</td>
+          <td>{{ post.category }}</td>
+          <td>{{ post.price }}</td>
+          <td><a href="{{ path('app_post_show', {'id': post.id}) }}" class="btn btn-primary post-show" data-id="{{ post.id }}">show</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+   <script>
+$(document).ready(function() {
+  // Listen for form submission
+  $('#post-form').on('submit', function(e) {
+    e.preventDefault();
+    var form = $(this);
+
+    // Send AJAX request to create new post
+    $.ajax({
+      type: form.attr('method'),
+      url: form.attr('action'),
+      data: form.serialize(),
+      dataType: 'json',
+      success: function(data) {
+        // Clear the table
+        $('#table-body').empty();
+        
+        // Append all posts to the table
+        for (var i = 0; i < data.length; i++) {
+          $('#table-body').append('<tr><td>' + data[i].id + '</td><td>' + data[i].name + '</td><td>' + data[i].category + '</td><td>' + data[i].price + '</td><td><a href="#" class="btn btn-primary post-show" data-id="' + data[i].id + '">show</a></td></tr>');
+        }
+        
+        // Clear form inputs
+        form.trigger('reset');
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        console.log('Error creating new post: ' + errorThrown);
+      }
+    });
+  });
+});
+
+$(document).on('click', '.post-show', function(event) {
+  event.preventDefault();
+  var postId = $(this).data('id');
+  var url = '/post/' + postId;
+  // Navigate to the URL
+  window.location.href = url;
+});
+
+$(document).on('click', '.post-show', function(event) {
+  event.preventDefault();
+  var postId = $(this).data('id');
+  var url = '/post/' + postId;
+  // Navigate to the URL
+  window.location.href = url;
+});
+
+</script>
+
+{% endblock %}

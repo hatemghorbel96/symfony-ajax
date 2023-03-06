@@ -1,0 +1,76 @@
+ {% extends 'base.html.twig' %}
+
+{% block title %}Post index{% endblock %}
+
+{% block body %}
+<div class="container mt-3">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <table class="table">
+   {#  <p>Ids: {{dump(ids)}}</p> #}
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+             <th>category</th>
+            <th>actions</th>
+            <th>checked</th>
+        </tr>
+    </thead>
+    <tbody id="table-body">
+           
+        {% for post in posts %}
+              <tr id="post-{{ post.id }}">
+                <td>{{ post.id }}</td>
+                <td>{{ post.name }}</td>
+                <td>{{ post.category.name }}</td>
+                <td><a href="{{ path('app_post_show', {'id': post.id}) }}" class="btn btn-primary post-show">Show</a></td>
+                <td><input type="checkbox" name="post[]" value="{{ post.id }}" class="form-check-input"></td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">No records found.</td>
+            </tr>
+        {% endfor %}
+        <button id="delete-selected" class="btn btn-danger">Delete Selected</button>
+
+    </tbody>
+</table>
+ </div>
+
+ <script>
+$(document).ready(function() {
+    $('#delete-selected').click(function(e) {
+        e.preventDefault();
+        var ids = [];
+        $('input[name="post[]"]:checked').each(function() {
+            ids.push($(this).val());
+             
+        });
+        if (ids.length > 0) {
+            console.log('1re',ids,'length:',ids.length);
+            $.ajax({
+                type: 'POST',
+                url: '/post/deletemultiple',
+                data: {ids: ids.join(',')},
+                
+                
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        // Remove the deleted rows from the HTML table
+                        response.deletedIds.forEach(function(id) {
+                            $('#post-' + id).remove();
+                        });
+                    } else {
+                        alert(response.message);
+                    }
+                }
+            });
+        } else {
+            alert('Please select at least one post to delete.');
+        }
+    });
+});
+
+</script>
+ {% endblock %}

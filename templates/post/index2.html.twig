@@ -1,0 +1,137 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Post index{% endblock %}
+
+{% block body %}
+ <div class="container">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <h1>Post index</h1>
+    <form id="search-form">
+    <input type="text" name="q" placeholder="Search by name" id="search-input">
+    {# <button type="submit">Search</button> #}
+    </form>
+
+     {# spinner #}
+            <div id="spinner" style="display: none;">
+            <div class="spinner-border m-5" role="status">
+        <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+  <table>
+  
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody id="table-body">
+           
+        {% for post in posts %}
+            <tr>
+                <td>{{ post.id }}</td>
+                <td>{{ post.name }}</td>
+                <td>{{ post.description }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">No records found.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+    <a href="{{ path('app_post_new') }}">Create new</a>
+
+    <script>
+   
+    $(document).ready(function() {
+    $('#search-form').on('keyup', function(event) {
+        event.preventDefault();
+
+          // Check if the search input is empty
+        if ($('#search-input').val() === '') {
+            $('#table-body').html('');
+            $('#spinner').hide();
+            return;
+        }
+        // Show the spinner
+        $('#spinner').show();
+
+        $.ajax({
+            url: '/post/product/search',
+            type: 'GET',
+            data: {
+                q: $('#search-input').val()
+            },
+            success: function(response) {
+                let html = '';
+                  console.log(response);
+                   
+                response.forEach(function(post) {
+                    html += '<tr>';
+                    html += '<td>' + post.id + '</td>';
+                    html += '<td>' + post.name + '</td>';
+                  html += '<td><a href="#" class="post-show" data-id="' + post.id + '">show</a> <a href="#" class="post-edit" data-id="' + post.id + '">edit</a></td>';
+
+                    html += '</tr>';
+                
+                });
+                   
+                // Update the HTML table structure here
+                $('#table-body').html(html);
+                 // Hide the spinner
+                $('#spinner').hide();
+            },
+            error: function(xhr, status, error) {
+                console.log(error);
+                 // Hide the spinner
+                $('#spinner').hide();
+            }
+        });
+    });
+});
+$(document).on('click', '.post-show', function(event) {
+    event.preventDefault();
+    var postId = $(this).data('id');
+    var url = '/post/' + postId;
+    // Navigate to the URL
+    window.location.href = url;
+});
+
+// Event listener for the edit link
+$(document).on('click', '.post-edit', function(event) {
+    event.preventDefault();
+    var postId = $(this).data('id');
+    var url = '/post/' + postId + '/edit';
+    // Navigate to the URL
+    window.location.href = url;
+});
+   {#  searchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const query = searchForm.q.value;
+        
+        fetch(`/product/search?q=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                let html = '';
+                data.forEach(post => {
+                    html += `
+                        <tr>
+                            <td>${post.id}</td>
+                            <td>${post.name}</td>
+                            <td>
+                                <a href="${path('app_post_show', {'id': post.id})}">show</a>
+                                <a href="${path('app_post_edit', {'id': post.id})}">edit</a>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tableBody.innerHTML = html;
+            }).catch(error => console.error(error));
+    }); #}
+</script>
+</div>
+{% endblock %}
